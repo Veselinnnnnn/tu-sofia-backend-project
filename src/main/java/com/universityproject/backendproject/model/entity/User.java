@@ -38,6 +38,16 @@ public class User extends BaseEntity implements UserDetails {
     @OneToOne
     private Animal animal;
 
+    @Column(nullable = false)
+    private String title;
+
+    @Lob
+    @Column(columnDefinition = "MEDIUMBLOB")
+    private byte[] img;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private AdvancedUserDetails advancedUserDetails;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();

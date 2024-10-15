@@ -11,10 +11,14 @@ public interface JwtService {
 
     Long extractUserId1(String token) throws Exception;
 
+    Long extractUserId(String token) throws Exception;
+
     boolean isTokenValid(String token, UserDetails userDetails) throws Exception;
 
     String generateToken(User user) throws Exception;
 
 
     String generateToken(Map<String, Object> extraClaims, User user) throws Exception;
+
+    User validateTokenAndGetUser(String token) throws Exception;
 }

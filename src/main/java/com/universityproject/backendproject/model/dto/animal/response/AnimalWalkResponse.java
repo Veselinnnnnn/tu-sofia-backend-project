@@ -16,4 +16,14 @@ public class AnimalWalkResponse {
     private String type;
 
     private String username;
+
+    private String breed;
+
+    private int age;
+
+    private String description;
+
+    private String slogan;
+
+    private String img;
 }

@@ -1,6 +1,7 @@
 package com.universityproject.backendproject.model.dto.authentication.request;
 
 
+import com.universityproject.backendproject.model.enums.UserRoleEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,4 +17,6 @@ public class RegisterRequest {
     private String lastName;
     private String email;
     private String password;
+    private UserRoleEnum role;
+    private String title;
 }
