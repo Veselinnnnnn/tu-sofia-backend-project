@@ -1,5 +1,8 @@
 package com.universityproject.backendproject.service.comment;
 
+import com.universityproject.backendproject.exception.AnimalNotFoundException;
+import com.universityproject.backendproject.exception.CommentNotFoundException;
+import com.universityproject.backendproject.exception.UserNotFoundException;
 import com.universityproject.backendproject.model.dto.comment.request.CommentRequest;
 import com.universityproject.backendproject.model.dto.comment.response.CommentResponse;
 import com.universityproject.backendproject.model.entity.Animal;
@@ -13,6 +16,7 @@ import com.universityproject.backendproject.repository.CommentRepository;
 import com.universityproject.backendproject.repository.UserRepository;
 import com.universityproject.backendproject.service.animal.AnimalService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
@@ -30,13 +35,17 @@ public class CommentServiceImpl implements CommentService {
     private final AnimalRepository animalRepository;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
-
     private final AnimalService animalService;
 
     @Override
     public void addComment(Long animalId, Long userId, CommentRequest request) {
-        Animal animal = animalRepository.findById(animalId).orElseThrow(() -> new IllegalArgumentException("Invalid animal ID"));
-        User user = this.userRepository.findUserById(userId);
+        log.info("Adding comment for animal ID: {}, user ID: {}", animalId, userId);
+
+        Animal animal = animalRepository.findById(animalId)
+                .orElseThrow(() -> new AnimalNotFoundException("Invalid animal ID: " + animalId));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Invalid user ID: " + userId));
 
         Comment comment = new Comment();
         comment.setContent(request.getContent());
@@ -46,178 +55,115 @@ public class CommentServiceImpl implements CommentService {
         comment.setCreatedAt(LocalDateTime.now());
 
         commentRepository.save(comment);
-
-        this.animalService.updateAnimalRating(comment.getAnimal().getId());
+        animalService.updateAnimalRating(comment.getAnimal().getId());
+        log.info("Comment added successfully for animal ID: {}", animalId);
     }
 
     @Override
     public void deleteComment(Long id) {
-        Comment comment = commentRepository.findById(id).orElse(null);
-        if (comment != null) {
-            commentRepository.delete(comment);
-            animalService.updateAnimalRating(comment.getAnimal().getId());
-        }
+        log.info("Deleting comment ID: {}", id);
+
+        Comment comment = commentRepository.findById(id)
+                .orElseThrow(() -> new CommentNotFoundException("Comment not found with ID: " + id));
+
+        commentRepository.delete(comment);
+        animalService.updateAnimalRating(comment.getAnimal().getId());
+        log.info("Comment deleted successfully with ID: {}", id);
     }
 
     @Override
     public void updateComment(Long commentId, Comment request) {
+        log.info("Updating comment ID: {}", commentId);
+
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid comment ID"));
+                .orElseThrow(() -> new CommentNotFoundException("Comment not found with ID: " + commentId));
 
         comment.setContent(request.getContent());
         comment.setRating(request.getRating());
         comment.setCreatedAt(LocalDateTime.now());
 
         commentRepository.save(comment);
-
-        this.animalService.updateAnimalRating(comment.getAnimal().getId());
+        animalService.updateAnimalRating(comment.getAnimal().getId());
+        log.info("Comment updated successfully with ID: {}", commentId);
     }
-
 
     @Override
     public CommentResponse incrementLikes(Long commentId, Long userId) {
+        log.info("Incrementing likes for comment ID: {}, user ID: {}", commentId, userId);
         return handleReaction(commentId, userId, ReactionTypeEnum.LIKE);
     }
 
     @Override
     public CommentResponse incrementDislikes(Long commentId, Long userId) {
+        log.info("Incrementing dislikes for comment ID: {}, user ID: {}", commentId, userId);
         return handleReaction(commentId, userId, ReactionTypeEnum.DISLIKE);
     }
 
-//    @Override
-//    public CommentResponse incrementLikes(Long id) {
-//        Comment comment = commentRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Comment not found"));
-//        comment.setLikes(comment.getLikes() + 1);
-//        Comment updatedComment = commentRepository.save(comment);
-//        return modelMapper.map(updatedComment, CommentResponse.class);
-//    }
-//
-//    @Override
-//    public CommentResponse incrementDislikes(Long id) {
-//        Comment comment = commentRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Comment not found"));
-//        comment.setDislikes(comment.getDislikes() + 1);
-//        Comment updatedComment = commentRepository.save(comment);
-//        return modelMapper.map(updatedComment, CommentResponse.class);
-//    }
-
-
-//    @Override
-//    public List<CommentResponse> findCommentsByAnimalId(Long animalId) {
-//        List<Comment> comments = this.commentRepository.findAllByAnimalId(animalId);
-//
-//        return comments.stream()
-//                .map(comment -> modelMapper.map(comment, CommentResponse.class))
-//                .collect(Collectors.toList());
-//
-//    }
-
     @Override
     public List<CommentResponse> findCommentsByAnimalId(Long animalId) {
-        List<Comment> comments = this.commentRepository.findAllByAnimalId(animalId);
+        log.info("Finding comments for animal ID: {}", animalId);
+
+        List<Comment> comments = commentRepository.findAllByAnimalId(animalId);
 
         return comments.stream()
                 .map(comment -> {
                     CommentResponse response = modelMapper.map(comment, CommentResponse.class);
                     response.setUsername(comment.getUser().getUsername());
-
                     response.setLikes(comment.getLikes());
                     response.setDislikes(comment.getDislikes());
                     response.setRating(comment.getRating());
-
                     return response;
                 })
                 .collect(Collectors.toList());
     }
 
     private CommentResponse handleReaction(Long commentId, Long userId, ReactionTypeEnum reactionType) {
-        Optional<CommentReaction> existingReaction = commentReactionRepository.findByUserIdAndCommentId(userId, commentId);
+        log.info("Handling reaction for comment ID: {}, user ID: {}, reaction type: {}", commentId, userId, reactionType);
 
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new CommentNotFoundException("Comment not found with ID: " + commentId));
 
-        CommentReaction userReaction = null;
+        Optional<CommentReaction> existingReaction = commentReactionRepository.findByUserIdAndCommentId(userId, commentId);
+        CommentReaction userReaction;
 
         if (existingReaction.isPresent()) {
             CommentReaction reaction = existingReaction.get();
-
-            // If the reaction is the same as the existing one, return without making changes
             if (reaction.getReactionType() == reactionType) {
-                CommentResponse response = modelMapper.map(comment, CommentResponse.class);
-                response.setCurrentUserReactionType(reaction.getReactionType());
-                return response;
+                log.info("User has already reacted with the same type: {}", reactionType);
+                return prepareResponse(comment, reaction.getReactionType());
             } else {
-                // Remove the previous reaction count
-                if (reaction.getReactionType() == ReactionTypeEnum.LIKE) {
-                    comment.setLikes(comment.getLikes() - 1);
-                } else if (reaction.getReactionType() == ReactionTypeEnum.DISLIKE) {
-                    comment.setDislikes(comment.getDislikes() - 1);
-                }
-
-                // Update to the new reaction type
+                updateReactionCounts(comment, reaction.getReactionType(), -1);
                 reaction.setReactionType(reactionType);
                 userReaction = commentReactionRepository.save(reaction);
             }
         } else {
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-            CommentReaction reaction = new CommentReaction();
-            reaction.setUser(user);
-            reaction.setComment(comment);
-            reaction.setReactionType(reactionType);
-            userReaction = commentReactionRepository.save(reaction);
+            userReaction = new CommentReaction();
+            userReaction.setUser(user);
+            userReaction.setComment(comment);
+            userReaction.setReactionType(reactionType);
+            userReaction = commentReactionRepository.save(userReaction);
         }
 
-        // Add the new reaction count
-        if (reactionType == ReactionTypeEnum.LIKE) {
-            comment.setLikes(comment.getLikes() + 1);
-        } else if (reactionType == ReactionTypeEnum.DISLIKE) {
-            comment.setDislikes(comment.getDislikes() + 1);
-        }
-
+        updateReactionCounts(comment, reactionType, 1);
         Comment updatedComment = commentRepository.save(comment);
 
-        // Map the updated comment and set the user reaction in the response
-        CommentResponse response = modelMapper.map(updatedComment, CommentResponse.class);
-        response.setCurrentUserReactionType(userReaction.getReactionType());
-        return response;
+        return prepareResponse(updatedComment, userReaction.getReactionType());
     }
 
+    private void updateReactionCounts(Comment comment, ReactionTypeEnum reactionType, int increment) {
+        if (reactionType == ReactionTypeEnum.LIKE) {
+            comment.setLikes(comment.getLikes() + increment);
+        } else if (reactionType == ReactionTypeEnum.DISLIKE) {
+            comment.setDislikes(comment.getDislikes() + increment);
+        }
+    }
 
-//    @Override
-//    public void createComment(Long authorId, String description, Long userId) {
-//        if (userRepository.findById(authorId).isPresent() && userRepository.findById(userId).isPresent()) {
-//
-//            User author = userRepository.findById(authorId).get();
-//            User user = userRepository.findById(userId).get();
-//
-//            Comment comment = new Comment(description, author.getUsername(), user);
-//
-//            commentRepository.save(comment);
-//        } else {
-//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User was not found.");
-//        }
-//
-//    }
-
-//    @Override
-//    public List<CommentResponse> findAllByUserId(Long id) {
-//        try {
-//            List<Comment> comments = commentRepository.findAllByUserId(id);
-//
-//            if (comments.size() > 5) {
-//                comments = comments.subList(comments.size() - 5, comments.size());
-//            }
-//
-//            Collections.reverse(comments);
-//
-//            return comments.stream()
-//                    .map(c -> modelMapper.map(c, CommentResponse.class))
-//                    .collect(Collectors.toList());
-//        } catch (EntityNotFoundException e) {
-//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User has no comments", e);
-//        }
-//    }
+    private CommentResponse prepareResponse(Comment comment, ReactionTypeEnum currentUserReactionType) {
+        CommentResponse response = modelMapper.map(comment, CommentResponse.class);
+        response.setCurrentUserReactionType(currentUserReactionType);
+        return response;
+    }
 }

@@ -4,6 +4,8 @@ import com.universityproject.backendproject.model.dto.testimonial.request.Testim
 import com.universityproject.backendproject.model.dto.testimonial.response.TestimonialResponse;
 import com.universityproject.backendproject.service.testiomonial.TestimonialService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,23 +17,27 @@ public class TestimonialController {
 
     private final TestimonialService testimonialService;
 
-    @GetMapping()
-    public List<TestimonialResponse> getAllTestimonials() {
-        return testimonialService.getAllTestimonials();
+    @GetMapping
+    public ResponseEntity<List<TestimonialResponse>> getAllTestimonials() {
+        List<TestimonialResponse> testimonials = testimonialService.getAllTestimonials();
+        return ResponseEntity.ok(testimonials);
     }
 
-    @PostMapping()
-    public TestimonialResponse submitTestimonial(@RequestBody TestimonialRequest request) {
-        return testimonialService.saveTestimonial(request);
+    @PostMapping
+    public ResponseEntity<TestimonialResponse> submitTestimonial(@RequestBody TestimonialRequest request) {
+        TestimonialResponse testimonialResponse = testimonialService.saveTestimonial(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(testimonialResponse);
     }
 
     @PutMapping()
-    public TestimonialResponse updateTestimonial(@RequestParam Long id, @RequestBody TestimonialRequest testimonialRequest) {
-        return testimonialService.updateTestimonial(id, testimonialRequest);
+    public ResponseEntity<TestimonialResponse> updateTestimonial(@RequestParam Long id, @RequestBody TestimonialRequest testimonialRequest) {
+        TestimonialResponse updatedTestimonial = testimonialService.updateTestimonial(id, testimonialRequest);
+        return ResponseEntity.ok(updatedTestimonial);
     }
 
     @DeleteMapping()
-    public void deleteTestimonial(@RequestParam Long id) {
+    public  ResponseEntity<Void> deleteTestimonial(@RequestParam Long id) {
         testimonialService.deleteTestimonial(id);
+        return ResponseEntity.noContent().build();
     }
 }

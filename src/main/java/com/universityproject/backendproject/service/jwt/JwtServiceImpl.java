@@ -1,5 +1,8 @@
 package com.universityproject.backendproject.service.jwt;
 
+import com.universityproject.backendproject.exception.InvalidTokenSignatureException;
+import com.universityproject.backendproject.exception.TokenValidationException;
+import com.universityproject.backendproject.exception.UserNotFoundException;
 import com.universityproject.backendproject.model.entity.User;
 import com.universityproject.backendproject.repository.UserRepository;
 import io.jsonwebtoken.Claims;
@@ -29,11 +32,12 @@ import static com.universityproject.backendproject.constant.JwtAuthenticationCon
 @RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
 
-    private final UserRepository userRepository;
     private static final Logger log = LoggerFactory.getLogger(JwtServiceImpl.class);
 
+    private final UserRepository userRepository;
+
     @Override
-    public User validateTokenAndGetUser(String token) throws Exception {
+    public User validateTokenAndGetUser(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(getSignInKey())
@@ -43,13 +47,13 @@ public class JwtServiceImpl implements JwtService {
 
             Long userId = Long.parseLong(claims.getSubject());
             return userRepository.findById(userId)
-                    .orElseThrow(() -> new Exception("User not found"));
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
         } catch (SignatureException e) {
             log.error("Invalid token signature", e);
-            throw new Exception("Invalid token signature", e);
+            throw new InvalidTokenSignatureException("Invalid token signature", e);
         } catch (Exception e) {
             log.error("Token validation failed", e);
-            throw new Exception("Token validation failed", e);
+            throw new TokenValidationException("Token validation failed", e);
         }
     }
 

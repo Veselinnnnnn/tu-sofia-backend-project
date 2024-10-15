@@ -6,11 +6,11 @@ import com.universityproject.backendproject.model.dto.authentication.request.Res
 import com.universityproject.backendproject.model.dto.authentication.response.AuthenticationResponse;
 
 public interface AuthenticationService {
-    AuthenticationResponse register(RegisterRequest request) throws Exception;
+    AuthenticationResponse register(RegisterRequest request);
 
-    AuthenticationResponse authenticate(AuthenticationRequest request) throws Exception;
+    AuthenticationResponse authenticate(AuthenticationRequest request);
 
-    void sendPasswordResetLink(String email) throws Exception;
+    void sendPasswordResetLink(String email);
 
-    void resetPassword(ResetPasswordRequest request) throws Exception;
+    void resetPassword(ResetPasswordRequest request);
 }

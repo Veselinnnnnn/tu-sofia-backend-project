@@ -1,6 +1,5 @@
 package com.universityproject.backendproject.service.jwt;
 
-
 import com.universityproject.backendproject.model.entity.User;
 import org.springframework.security.core.userdetails.UserDetails;
 

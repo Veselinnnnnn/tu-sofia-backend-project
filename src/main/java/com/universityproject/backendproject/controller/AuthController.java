@@ -1,5 +1,6 @@
 package com.universityproject.backendproject.controller;
 
+import com.universityproject.backendproject.exception.*;
 import com.universityproject.backendproject.model.dto.authentication.request.AuthenticationRequest;
 import com.universityproject.backendproject.model.dto.authentication.request.RegisterRequest;
 import com.universityproject.backendproject.model.dto.authentication.request.ResetPasswordRequest;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
@@ -21,41 +23,26 @@ public class AuthController {
 
     @PostMapping("/reset-password")
     public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
-        try {
-            authenticationService.resetPassword(request);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        authenticationService.resetPassword(request);
+        return ResponseEntity.noContent().build(); // 204 No Content
     }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<Void> forgotPassword(@RequestBody Map<String, String> request) {
-        try {
-            authenticationService.sendPasswordResetLink(request.get("email"));
-            return ResponseEntity.ok().build(); // 200 OK
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // Handle specific exceptions as needed
-        }
+        authenticationService.sendPasswordResetLink(request.get("email"));
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request) {
-        try {
-            AuthenticationResponse response = authenticationService.register(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response); // 201 Created
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // Handle specific exceptions as needed
-        }
+        AuthenticationResponse response = authenticationService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
 
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
-        try {
-            AuthenticationResponse response = authenticationService.authenticate(request);
-            return ResponseEntity.ok(response); // 200 OK
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // Handle specific exceptions as needed
-        }
+        AuthenticationResponse response = authenticationService.authenticate(request);
+        return ResponseEntity.ok(response);
     }
 }

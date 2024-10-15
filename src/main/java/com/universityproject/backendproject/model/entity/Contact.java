@@ -19,7 +19,5 @@ public class Contact extends BaseEntity {
     private String phone;
     private String subject;
     private String message;
-    @OneToOne(mappedBy = "contact", cascade = CascadeType.ALL, orphanRemoval = true)
-    private EmailThread emailThread;
 }
 

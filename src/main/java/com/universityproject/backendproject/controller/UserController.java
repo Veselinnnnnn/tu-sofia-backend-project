@@ -5,11 +5,10 @@ import com.universityproject.backendproject.model.dto.user.request.UserBasicInfo
 import com.universityproject.backendproject.model.dto.user.response.UserAdvancedInfoResponse;
 import com.universityproject.backendproject.model.dto.user.response.UserBasicInfoResponse;
 import com.universityproject.backendproject.model.dto.user.response.UserFirstAndLastNameResponse;
-import com.universityproject.backendproject.service.comment.CommentService;
 import com.universityproject.backendproject.service.user.UserService;
-import com.universityproject.backendproject.service.walkhistory.WalkHistoryService;
 import lombok.AllArgsConstructor;
-import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,116 +20,58 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final ModelMapper modelMapper;
-    private final WalkHistoryService walkHistoryService;
-    private final CommentService commentService;
 
     @GetMapping("/members")
-    public List<UserBasicInfoResponse> getAllMembers() {
-        return userService.getAllMembers();
+    public ResponseEntity<List<UserBasicInfoResponse>> getAllMembers() {
+        List<UserBasicInfoResponse> members = userService.getAllMembers();
+        return new ResponseEntity<>(members, HttpStatus.OK);
     }
 
     @GetMapping("/basic-info")
-    public UserBasicInfoResponse getBasicUserInfoById(@RequestParam Long id) {
-        return this.userService.getBasicUserInfoById(id);
+    public ResponseEntity<UserBasicInfoResponse> getBasicUserInfoById(@RequestParam Long id) {
+        UserBasicInfoResponse userInfo = this.userService.getBasicUserInfoById(id);
+        return new ResponseEntity<>(userInfo, HttpStatus.OK);
     }
 
     @PutMapping("/basic-info")
-    public void updateBasicUserInfo(@RequestBody UserBasicInfoRequest request) {
+    public ResponseEntity<Void> updateBasicUserInfo(@RequestBody UserBasicInfoRequest request) {
         this.userService.updateBasicUserInfo(request);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/advanced-info")
-    public UserAdvancedInfoResponse getAdvancedUserInfoById(@RequestParam Long id) {
-        return this.userService.getAdvancedUserInfoById(id);
+    public ResponseEntity<UserAdvancedInfoResponse> getAdvancedUserInfoById(@RequestParam Long id) {
+        UserAdvancedInfoResponse userInfo = this.userService.getAdvancedUserInfoById(id);
+        return new ResponseEntity<>(userInfo, HttpStatus.OK);
     }
 
     @PutMapping("/advanced-info")
-    public void updateAdvancedUserInfo(@RequestBody UserAdvancedInfoRequest request) {
+    public ResponseEntity<Void> updateAdvancedUserInfo(@RequestBody UserAdvancedInfoRequest request) {
         this.userService.updateAdvancedUserInfo(request);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/user-image")
-    public byte[] getUserProfileImageById(@RequestParam Long id) {
-        return this.userService.getUserProfileImageById(id);
+    public ResponseEntity<byte[]> getUserProfileImageById(@RequestParam Long id) {
+        byte[] image = this.userService.getUserProfileImageById(id);
+        return new ResponseEntity<>(image, HttpStatus.OK);
     }
 
     @PutMapping("/user-image")
-    public void uploadUserProfileImage(@RequestParam Long id, @RequestPart MultipartFile image) {
+    public ResponseEntity<Void> uploadUserProfileImage(@RequestParam Long id, @RequestPart MultipartFile image) {
         this.userService.uploadUserProfileImage(id, image);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/first-last-name")
-    public UserFirstAndLastNameResponse getFirstAndLastName(@RequestParam Long id) {
-        return this.userService.getFirstAndLastName(id);
+    public ResponseEntity<UserFirstAndLastNameResponse> getFirstAndLastName(@RequestParam Long id) {
+        UserFirstAndLastNameResponse nameResponse = this.userService.getFirstAndLastName(id);
+        return new ResponseEntity<>(nameResponse, HttpStatus.OK);
     }
-
 
     @GetMapping("/random")
-    public List<UserBasicInfoResponse> getRandomUsers() {
-        return this.userService.getRandomUsers();
+    public ResponseEntity<List<UserBasicInfoResponse>> getRandomUsers() {
+        List<UserBasicInfoResponse> randomUsers = this.userService.getRandomUsers();
+        return new ResponseEntity<>(randomUsers, HttpStatus.OK);
     }
-
-
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    @GetMapping("/available")
-//    public List<UserAvailableResponse> allAvailable() {
-//        return userService.findAllAvailable();
-//    }
-
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    @GetMapping("/all")
-//    public List<UserAvailableResponse> findAllUsers() {
-//        try {
-//            return userService.findAllUsers();
-//        } catch (EntityNotFoundException e) {
-//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
-//
-//        }
-//    }
-
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    @GetMapping("/{id}/comments")
-//    public List<CommentResponse> getUserComments(@PathVariable Long id) {
-//        return commentService.findAllByUserId(id);
-//    }
-
-//    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
-//    @GetMapping("/{id}/walks/page/{page}")
-//    public Page<WalkHistoryResponse> getWalkHistory(@PathVariable Long id, @PathVariable int page) throws ParseException {
-//        try {
-//            Page<WalkHistory> walkHistories = walkHistoryService.findByUserId(id, page);
-//
-//            return walkHistories
-//                    .map(walkHistory -> modelMapper.map(walkHistory, WalkHistoryResponse.class));
-//        } catch (EntityNotFoundException e) {
-//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
-//
-//        }
-//    }
-
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    @PutMapping("/animal/{animalId}/walk")
-//    public void takeOnWalk(@RequestParam Long id, @PathVariable Long animalId) {
-//        try {
-//            userService.takeOnWalk(id, animalId);
-//        } catch (Exception e) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-//        }
-//    }
-
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    @PutMapping("/{id}/animal/{animalId}/return")
-//    public void returnFromWalk(@PathVariable Long id, @PathVariable Long animalId) {
-//
-//        userService.returnFromWalk(id, animalId);
-//    }
-
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    @PutMapping("/comment")
-//    public void addComment(@RequestBody CommentRequest commentRequest) {
-//        commentService.createComment(commentRequest.getAuthorId(),
-//                commentRequest.getDescription(),
-//                commentRequest.getUserId());
-//    }
 }

@@ -9,8 +9,6 @@ import java.util.List;
 
 public interface CommentService {
 
-//    void createComment(Long authorId, String description, Long userId);
-
     void addComment(Long animalId, Long userId, CommentRequest request);
 
     void deleteComment(Long id);
@@ -20,7 +18,6 @@ public interface CommentService {
     List<CommentResponse> findCommentsByAnimalId(Long animalId);
 
     CommentResponse incrementLikes(Long commentId, Long userId);
-    CommentResponse incrementDislikes(Long commentId, Long userId);
 
-//    List<CommentResponse> findAllByUserId(Long id);
+    CommentResponse incrementDislikes(Long commentId, Long userId);
 }

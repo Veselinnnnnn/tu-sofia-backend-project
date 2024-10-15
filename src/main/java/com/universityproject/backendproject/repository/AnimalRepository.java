@@ -10,7 +10,6 @@ import java.util.List;
 
 
 public interface AnimalRepository extends JpaRepository<Animal, Long> {
-
     @Query("SELECT a FROM Animal a WHERE a.availability = false")
     Page<Animal> findAllAvailable(PageRequest pageable);
 

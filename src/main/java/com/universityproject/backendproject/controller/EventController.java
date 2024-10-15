@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,40 +26,48 @@ import java.util.stream.Collectors;
 @RequestMapping("/events")
 @AllArgsConstructor
 public class EventController {
+
     private final EventService eventService;
 
     @GetMapping("/current")
-    public List<EventResponse> getCurrentEvents() {
-        return eventService.getCurrentEvents();
+    public ResponseEntity<List<EventResponse>> getCurrentEvents() {
+        List<EventResponse> events = eventService.getCurrentEvents();
+        return new ResponseEntity<>(events, HttpStatus.OK);
     }
 
     @GetMapping("/past")
-    public List<EventResponse> getPastEvents() {
-        return eventService.getPastEvents();
+    public ResponseEntity<List<EventResponse>> getPastEvents() {
+        List<EventResponse> events = eventService.getPastEvents();
+        return new ResponseEntity<>(events, HttpStatus.OK);
     }
 
     @PostMapping
-    public EventResponse createEvent(@RequestBody EventRequest eventRequest) {
-        return eventService.createEvent(eventRequest);
+    public ResponseEntity<EventResponse> createEvent(@RequestBody EventRequest eventRequest) {
+        EventResponse createdEvent = eventService.createEvent(eventRequest);
+        return new ResponseEntity<>(createdEvent, HttpStatus.CREATED);
     }
 
-    @PutMapping
-    public EventResponse updateEvent(@RequestParam Long id, @RequestBody EventRequest eventRequest) {
-        return eventService.updateEvent(id, eventRequest);
+    @PutMapping("/{id}")
+    public ResponseEntity<EventResponse> updateEvent(@PathVariable Long id, @RequestBody EventRequest eventRequest) {
+        EventResponse updatedEvent = eventService.updateEvent(id, eventRequest);
+        return new ResponseEntity<>(updatedEvent, HttpStatus.OK);
     }
 
-    @DeleteMapping
-    public void deleteEvent(@RequestParam Long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         eventService.deleteEvent(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/upcoming")
-    public List<EventResponse> getUpcomingEvents() {
-        return eventService.getUpcomingEvents();
+    public ResponseEntity<List<EventResponse>> getUpcomingEvents() {
+        List<EventResponse> events = eventService.getUpcomingEvents();
+        return new ResponseEntity<>(events, HttpStatus.OK);
     }
 
     @GetMapping("/completed")
-    public List<EventResponse> getCompletedEvents() {
-        return eventService.getCompletedEvents();
+    public ResponseEntity<List<EventResponse>> getCompletedEvents() {
+        List<EventResponse> events = eventService.getCompletedEvents();
+        return new ResponseEntity<>(events, HttpStatus.OK);
     }
 }

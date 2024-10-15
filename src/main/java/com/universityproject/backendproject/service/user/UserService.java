@@ -35,13 +35,5 @@ public interface UserService {
 
     UserIdResponse findById(Long id);
 
-    List<UserAvailableResponse> findAllAvailable();
-
-    List<UserAvailableResponse> findAllUsers();
-
-    void takeOnWalk(Long userId, Long animalId) throws Exception;
-
-    void returnFromWalk(Long userId, Long animalId);
-
     List<UserBasicInfoResponse> getAllMembers();
 }

@@ -9,5 +9,6 @@ import java.util.List;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findByDateTimeAfter(LocalDateTime dateTime);
+
     List<Event> findByDateTimeBefore(LocalDateTime dateTime);
 }
