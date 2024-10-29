@@ -1,12 +1,10 @@
 package com.universityproject.backendproject.controller;
 
 import com.universityproject.backendproject.model.dto.application.request.ApplicationCompositeRequest;
-import com.universityproject.backendproject.model.dto.application.request.ApplicationDetailsRequest;
-import com.universityproject.backendproject.model.dto.application.request.ApplicationRequest;
 import com.universityproject.backendproject.model.dto.application.response.ApplicationResponse;
 import com.universityproject.backendproject.service.application.ApplicationService;
-import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,55 +16,45 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
 
-//    @PostMapping
-//    public ApplicationResponse create(@RequestBody ApplicationRequest request) throws MessagingException {
-//        return this.applicationService.create(request);
-//    }
-
     @PostMapping
-    public ApplicationResponse create(@RequestBody ApplicationCompositeRequest request) throws MessagingException {
-        return applicationService.create(request);
+    public ResponseEntity<ApplicationResponse> create(@RequestBody ApplicationCompositeRequest request) {
+        ApplicationResponse response = this.applicationService.create(request);
+        return ResponseEntity.status(201).body(response);
     }
 
     @DeleteMapping
-    public void delete(@RequestParam Long id) {
+    public ResponseEntity<Void> delete(@RequestParam Long id) {
         this.applicationService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
-//    @PutMapping()
-//    public ApplicationResponse update(
-//            @RequestParam Long applicationId,
-//            @RequestBody ApplicationRequest request) throws MessagingException {
-//        return applicationService.update(applicationId, request);
-//    }
-
     @PutMapping()
-    public void update(@RequestParam Long id, @RequestBody ApplicationCompositeRequest request) throws MessagingException {
-            this.applicationService.update(id, request);
+    public ResponseEntity<Void> update(@RequestParam Long id, @RequestBody ApplicationCompositeRequest request) {
+        this.applicationService.update(id, request);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{id}")
-    public ApplicationResponse findById(@PathVariable Long id) {
-        return this.applicationService.findById(id);
+    public ResponseEntity<ApplicationResponse> findById(@PathVariable Long id) {
+        ApplicationResponse response = this.applicationService.findById(id);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("")
-    public List<ApplicationResponse> getRequestsByUserId(@RequestParam Long userId) {
-        return this.applicationService.getApplicationsByUserId(userId);
+    public ResponseEntity<List<ApplicationResponse>> getRequestsByUserId(@RequestParam Long userId) {
+        List<ApplicationResponse> responses = this.applicationService.getApplicationsByUserId(userId);
+        return ResponseEntity.ok(responses);
     }
 
     @PostMapping("/{id}/approve")
-    public ApplicationResponse approveApplication(@PathVariable Long id) throws MessagingException {
-        return this.applicationService.approveApplication(id);
+    public ResponseEntity<ApplicationResponse> approveApplication(@PathVariable Long id) {
+        ApplicationResponse response = this.applicationService.approveApplication(id);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/decline")
-    public ApplicationResponse declineApplication(@PathVariable Long id) throws MessagingException {
-        return this.applicationService.declineApplication(id);
+    public ResponseEntity<ApplicationResponse> declineApplication(@PathVariable Long id) {
+        ApplicationResponse response = this.applicationService.declineApplication(id);
+        return ResponseEntity.ok(response);
     }
-
-//    @GetMapping("/{applicationId}")
-//    public ApplicationResponse getApplicationById(@PathVariable Long applicationId) {
-//        return applicationService.getApplicationById(applicationId);
-//    }
 }

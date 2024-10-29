@@ -1,22 +1,23 @@
 package com.universityproject.backendproject.service.animal;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.universityproject.backendproject.exception.AnimalNotFoundException;
+import com.universityproject.backendproject.exception.UserNotFoundException;
 import com.universityproject.backendproject.model.dto.animal.request.AnimalRequest;
 import com.universityproject.backendproject.model.dto.animal.response.AnimalResponse;
 import com.universityproject.backendproject.model.dto.animal.response.AnimalWalkResponse;
 import com.universityproject.backendproject.model.dto.comment.response.CommentResponse;
 import com.universityproject.backendproject.model.entity.Animal;
 import com.universityproject.backendproject.model.entity.Comment;
-import com.universityproject.backendproject.model.entity.CommentReaction;
 import com.universityproject.backendproject.model.entity.User;
 import com.universityproject.backendproject.repository.AnimalRepository;
 import com.universityproject.backendproject.repository.CommentReactionRepository;
 import com.universityproject.backendproject.repository.CommentRepository;
 import com.universityproject.backendproject.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -26,205 +27,141 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
 @Service
 @AllArgsConstructor
 public class AnimalServiceImpl implements AnimalService {
+
+    private static final Logger log = LoggerFactory.getLogger(AnimalServiceImpl.class);
 
     private final AnimalRepository animalRepository;
     private final CommentReactionRepository commentReactionRepository;
     private final CommentRepository commentRepository;
     private final ModelMapper modelMapper;
     private final UserRepository userRepository;
-    private final ObjectMapper objectMapper;
 
     @Override
     public List<AnimalResponse> findAll() {
-        List<Animal> animals = animalRepository.findAll();
-
-        return animals.stream()
-                .map(animal -> modelMapper.map(animal, AnimalResponse.class))
+        log.info("Fetching all animals");
+        return this.animalRepository.findAll().stream()
+                .map(animal -> this.modelMapper.map(animal, AnimalResponse.class))
                 .collect(Collectors.toList());
     }
 
     @Override
     public Page<AnimalResponse> findAllPaginated(int page, int size) {
-        PageRequest request = PageRequest.of(page, size);
-
-        return animalRepository
-                .findAll(request)
-                .map(a -> modelMapper.map(a, AnimalResponse.class));
+        log.info("Fetching paginated animals - Page: {}, Size: {}", page, size);
+        return this.animalRepository.findAll(PageRequest.of(page, size))
+                .map(animal -> this.modelMapper.map(animal, AnimalResponse.class));
     }
 
     @Override
     public List<AnimalResponse> findRandomAvailableAnimals() {
-        List<Animal> availableAnimals = animalRepository.findByAvailabilityTrue();
-        Random random = new Random();
-
-        Collections.shuffle(availableAnimals, random);
-
+        log.info("Fetching random available animals");
+        List<Animal> availableAnimals = this.animalRepository.findByAvailabilityTrue();
+        Collections.shuffle(availableAnimals, new Random());
         return availableAnimals.stream()
                 .limit(3)
-                .map(animal -> modelMapper.map(animal, AnimalResponse.class))
+                .map(animal -> this.modelMapper.map(animal, AnimalResponse.class))
                 .collect(Collectors.toList());
     }
 
     @Override
     public AnimalResponse findAnimalById(Long id, Long userId) {
-        Animal animal = animalRepository.findAnimalById(id);
-        AnimalResponse animalResponse = modelMapper.map(animal, AnimalResponse.class);
+        log.info("Fetching animal by ID: {} for user ID: {}", id, userId);
+        Animal animal = this.animalRepository.findById(id)
+                .orElseThrow(() -> new AnimalNotFoundException("Animal not found with ID: " + id));
 
+        AnimalResponse animalResponse = this.modelMapper.map(animal, AnimalResponse.class);
         List<CommentResponse> commentResponses = animal.getComments().stream()
                 .map(comment -> {
-                    CommentResponse commentResponse = modelMapper.map(comment, CommentResponse.class);
-
-                    // Fetch the user who made the comment
-                    User commentUser = userRepository.findUserById(comment.getUser().getId());
-                    if (commentUser != null) {
-                        commentResponse.setUsername(commentUser.getUsername());
-                    }
-
-                    // Fetch the current user's reaction to this comment, if any
-                    Optional<CommentReaction> existingReaction = commentReactionRepository.findByUserIdAndCommentId(userId, comment.getId());
-                    existingReaction.ifPresent(reaction -> commentResponse.setCurrentUserReactionType(reaction.getReactionType()));
-
+                    CommentResponse commentResponse = this.modelMapper.map(comment, CommentResponse.class);
+                    User commentUser = this.userRepository.findById(comment.getUser().getId())
+                            .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + comment.getUser().getId()));
+                    commentResponse.setUsername(commentUser.getUsername());
+                    this.commentReactionRepository.findByUserIdAndCommentId(userId, comment.getId())
+                            .ifPresent(reaction -> commentResponse.setCurrentUserReactionType(reaction.getReactionType()));
                     return commentResponse;
-                })
-                .collect(Collectors.toList());
+                }).collect(Collectors.toList());
 
         animalResponse.setComments(commentResponses);
-
         return animalResponse;
     }
 
     @Override
     public Page<AnimalWalkResponse> findAllAvailableAnimals(int page, int size) {
-        PageRequest request = PageRequest.of(page, size);
-
-        Page<Animal> animals = animalRepository.findByAvailabilityTrue(request);
-
-        return animals
+        log.info("Fetching all available animals - Page: {}, Size: {}", page, size);
+        return this.animalRepository.findByAvailabilityTrue(PageRequest.of(page, size))
                 .map(animal -> {
-                    AnimalWalkResponse animalWalkResponse = modelMapper.map(animal, AnimalWalkResponse.class);
-
-
+                    AnimalWalkResponse response = this.modelMapper.map(animal, AnimalWalkResponse.class);
                     if (animal.getUser() != null) {
-                        User user = userRepository.findById(animal.getUser().getId()).orElse(null);
+                        User user = this.userRepository.findById(animal.getUser().getId()).orElse(null);
                         if (user != null) {
-                            animalWalkResponse.setUsername(user.getUsername());
+                            response.setUsername(user.getUsername());
                         }
                     }
-
                     if (animal.getImg() != null) {
-                        String base64Image = Base64.getEncoder().encodeToString(animal.getImg());
-                        animalWalkResponse.setImg(base64Image);
-                        System.out.println("Base64 Image: " + base64Image); // Log Base64 image string
+                        response.setImg(Base64.getEncoder().encodeToString(animal.getImg()));
                     }
-
-
-                    return animalWalkResponse;
+                    return response;
                 });
     }
 
+    @Override
+    @Transactional
     public void updateAnimalRating(Long animalId) {
+        log.info("Updating animal rating for ID: {}", animalId);
         Animal animal = this.animalRepository.findById(animalId)
-                .orElseThrow(() -> new RuntimeException("Animal not found"));
+                .orElseThrow(() -> new AnimalNotFoundException("Animal not found with ID: " + animalId));
 
-        List<Comment> comments = this.commentRepository.findAllByAnimalId(animalId);
+        double averageRating = this.commentRepository.findAllByAnimalId(animalId).stream()
+                .mapToInt(Comment::getRating)
+                .average()
+                .orElse(0.0);
 
-        if (comments.isEmpty()) {
-            animal.setRating(0);
-        } else {
-            double averageRating = comments.stream()
-                    .mapToInt(Comment::getRating)
-                    .average()
-                    .orElse(0.0);
-
-            animal.setRating(averageRating);
-        }
-
+        animal.setRating(averageRating);
         this.animalRepository.save(animal);
     }
 
     @Override
-    public void updateAnimal(Long id, AnimalRequest animalRequest, MultipartFile img) throws IOException {
-        Animal existingAnimal = animalRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Animal not found with ID: " + id));
+    @Transactional
+    public void updateAnimal(Long id, AnimalRequest animalRequest, MultipartFile img) {
+        log.info("Updating animal with ID: {}", id);
+        Animal existingAnimal = this.animalRepository.findById(id)
+                .orElseThrow(() -> new AnimalNotFoundException("Animal not found with ID: " + id));
 
-        modelMapper.map(animalRequest, existingAnimal);
-
+        this.modelMapper.map(animalRequest, existingAnimal);
         if (img != null && !img.isEmpty()) {
-            existingAnimal.setImg(img.getBytes());
+            try {
+                existingAnimal.setImg(img.getBytes());
+            } catch (IOException ignored){
+                throw new AnimalNotFoundException("Image not available");
+            }
         }
-
-        animalRepository.save(existingAnimal);
+        this.animalRepository.save(existingAnimal);
     }
 
     @Override
     public void delete(Long id) {
-        if (animalRepository.existsById(id)) {
-            animalRepository.deleteById(id);
-        } else {
-            throw new EntityNotFoundException("Animal not found");
+        log.info("Deleting animal with ID: {}", id);
+        if (!this.animalRepository.existsById(id)) {
+            throw new AnimalNotFoundException("Animal not found with ID: " + id);
         }
+        this.animalRepository.deleteById(id);
     }
 
     @Override
-    public void createAnimal(AnimalRequest request, MultipartFile img) throws IOException {
-        Animal animal = modelMapper.map(request, Animal.class);
+    @Transactional
+    public void createAnimal(AnimalRequest request, MultipartFile img) {
+        log.info("Creating a new animal");
+        Animal animal = this.modelMapper.map(request, Animal.class);
         animal.setAvailability(true);
-
         if (img != null && !img.isEmpty()) {
-            animal.setImg(img.getBytes());
+            try {
+                animal.setImg(img.getBytes());
+            } catch (IOException ignored){
+                throw new AnimalNotFoundException("Image not available");
+            }
         }
-
-        animalRepository.save(animal);
-    }
-
-    @Override
-    public void adoptAnimal(Long id) {
-        animalRepository.deleteById(id);
-    }
-
-//    @Override
-//    public AnimalAvailableResponse findAnimalById(Long id) {
-//        try {
-//            Animal animal = animalRepository.findById(id).orElseThrow();
-//            return modelMapper.map(animal, AnimalAvailableResponse.class);
-//        } catch (EntityNotFoundException e) {
-//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not Found", e);
-//        } catch (HttpClientErrorException.Unauthorized e) {
-//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No accreditation !!!", e);
-//        }
-//
-//    }
-
-    @Override
-    public Page<AnimalWalkResponse> findAllAvailable(int page) {
-
-        PageRequest requestPage = PageRequest.of(page, 6);
-
-        Page<Animal> animals = animalRepository.findAllAvailable(requestPage);
-
-        return animals
-                .map(animal -> {
-                    System.out.println(animal);
-                    AnimalWalkResponse animalWalkResponse = modelMapper
-                            .map(animal, AnimalWalkResponse.class);
-
-                    if (animal.getUser() == null) {
-                        return animalWalkResponse;
-                    }
-
-                    User user = userRepository.findById(animal.getUser().getId()).orElse(null);
-
-                    if (user == null) {
-                        return animalWalkResponse;
-                    }
-
-                    animalWalkResponse.setUsername(user.getUsername());
-
-                    return animalWalkResponse;
-                });
+        this.animalRepository.save(animal);
     }
 }

@@ -63,8 +63,8 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public Long extractUserId1(String token) throws Exception {
-        return 0L;
+    public Long extractUserId1(String token) {
+        return 1L;
     }
 
     @Override

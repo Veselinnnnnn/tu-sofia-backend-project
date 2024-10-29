@@ -7,7 +7,5 @@ import java.util.List;
 
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
-    List<Application> findByEmail(String email);
-
     List<Application> findByUserId(Long userId);
 }

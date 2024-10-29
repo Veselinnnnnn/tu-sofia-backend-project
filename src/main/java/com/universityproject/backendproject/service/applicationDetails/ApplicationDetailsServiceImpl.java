@@ -1,12 +1,11 @@
 package com.universityproject.backendproject.service.applicationDetails;
 
-import com.universityproject.backendproject.model.dto.application.request.ApplicationDetailsRequest;
+import com.universityproject.backendproject.exception.ApplicationDetailsNotFoundException;
 import com.universityproject.backendproject.model.dto.application.response.ApplicationDetailsResponse;
-import com.universityproject.backendproject.model.entity.Application;
 import com.universityproject.backendproject.model.entity.ApplicationDetails;
 import com.universityproject.backendproject.repository.ApplicationDetailsRepository;
-import com.universityproject.backendproject.repository.ApplicationRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -14,48 +13,41 @@ import java.util.Optional;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class ApplicationDetailsServiceImpl implements ApplicationDetailsService {
 
     private final ApplicationDetailsRepository applicationDetailsRepository;
+    private final ModelMapper modelMapper; // If you want to use ModelMapper for mapping
 
+    @Override
     public ApplicationDetailsResponse getApplicationDetailsByApplicationId(Long applicationId) {
+        log.debug("Fetching application details for application ID: {}", applicationId);
         Optional<ApplicationDetails> applicationDetailsOpt = this.applicationDetailsRepository.findByApplicationId(applicationId);
-        return applicationDetailsOpt.map(this::mapToResponse).orElse(null);
+
+        ApplicationDetails applicationDetails = applicationDetailsOpt
+                .orElseThrow(() -> new ApplicationDetailsNotFoundException("Application details not found for application ID: " + applicationId));
+
+        return this.mapToResponse(applicationDetails);
     }
 
     @Override
     public void delete(Long id) {
-        if (!applicationDetailsRepository.existsById(id)) {
-            throw new IllegalArgumentException("Application details not found with ID: " + id);
+        log.debug("Attempting to delete application details with ID: {}", id);
+        if (!this.applicationDetailsRepository.existsById(id)) {
+            log.error("Application details not found with ID: {}", id);
+            throw new ApplicationDetailsNotFoundException("Application details not found with ID: " + id);
         }
-        applicationDetailsRepository.deleteById(id);
+        this.applicationDetailsRepository.deleteById(id);
+        log.info("Deleted application details with ID: {}", id);
     }
 
     private ApplicationDetailsResponse mapToResponse(ApplicationDetails applicationDetails) {
-        ApplicationDetailsResponse response = new ApplicationDetailsResponse();
-        response.setId(applicationDetails.getId());
-        response.setApplicationId(applicationDetails.getApplication().getId());
-        response.setFirstName(applicationDetails.getFirstName());
-        response.setLastName(applicationDetails.getLastName());
-        response.setEmail(applicationDetails.getEmail());
-        response.setPhoneNumber(applicationDetails.getPhoneNumber());
-        response.setAddress(applicationDetails.getAddress());
-        response.setCity(applicationDetails.getCity());
-        response.setState(applicationDetails.getState());
-        response.setPostalCode(applicationDetails.getPostalCode());
-        response.setCountry(applicationDetails.getCountry());
-        response.setReasonForAdoption(applicationDetails.getReasonForAdoption());
-        response.setAnimalId(applicationDetails.getAnimal().getId());
+        log.debug("Mapping ApplicationDetails to ApplicationDetailsResponse for ID: {}", applicationDetails.getId());
+        ApplicationDetailsResponse response = modelMapper.map(applicationDetails, ApplicationDetailsResponse.class);
+
         response.setPickUpTime(applicationDetails.getPickUpTime() != null ? applicationDetails.getPickUpTime().toString() : null);
         response.setReturnTime(applicationDetails.getReturnTime() != null ? applicationDetails.getReturnTime().toString() : null);
-        response.setHasPreviousExperienceWithPets(applicationDetails.getHasPreviousExperienceWithPets());
-        response.setHasOtherPets(applicationDetails.getHasOtherPets());
-        response.setHasChildren(applicationDetails.getHasChildren());
-        response.setHasFencedYard(applicationDetails.getHasFencedYard());
-        response.setReferenceContact(applicationDetails.getReferenceContact());
-        response.setBackgroundCheckStatus(applicationDetails.getBackgroundCheckStatus());
 
         return response;
     }
 }
-

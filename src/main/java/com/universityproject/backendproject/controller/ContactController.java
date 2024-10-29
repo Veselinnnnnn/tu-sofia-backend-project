@@ -18,8 +18,8 @@ public class ContactController {
     private final ContactService contactService;
 
     @PostMapping
-    public ResponseEntity<String> sendContactForm(@RequestBody ContactRequest request) {
+    public ResponseEntity<Void> sendContactForm(@RequestBody ContactRequest request) {
         contactService.sendEmail(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Contact form submitted successfully.");
+        return ResponseEntity.status(HttpStatus.CREATED).body(null);
     }
 }

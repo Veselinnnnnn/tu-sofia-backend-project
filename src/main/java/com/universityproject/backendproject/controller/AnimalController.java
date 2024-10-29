@@ -4,17 +4,14 @@ import com.universityproject.backendproject.model.dto.animal.request.AnimalReque
 import com.universityproject.backendproject.model.dto.animal.response.AnimalResponse;
 import com.universityproject.backendproject.model.dto.animal.response.AnimalWalkResponse;
 import com.universityproject.backendproject.service.animal.AnimalService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -25,114 +22,76 @@ public class AnimalController {
     private final AnimalService animalService;
 
     @GetMapping("/all")
-    public List<AnimalResponse> findAllAnimals() {
-        return animalService.findAll();
+    public ResponseEntity<List<AnimalResponse>> findAllAnimals() {
+        List<AnimalResponse> animals = this.animalService.findAll();
+        return ResponseEntity.ok(animals);
     }
 
     @GetMapping("/all/paginated")
-    public Page<AnimalResponse> findAllAnimalsPaginated(@RequestParam int page, @RequestParam int size) {
-        return animalService.findAllPaginated(page,size);
+    public ResponseEntity<Page<AnimalResponse>> findAllAnimalsPaginated(@RequestParam int page, @RequestParam int size) {
+        Page<AnimalResponse> animals = this.animalService.findAllPaginated(page, size);
+        return ResponseEntity.ok(animals);
     }
 
     @GetMapping("/random")
-    public List<AnimalResponse> findRandomAvailableAnimals() {
-        return animalService.findRandomAvailableAnimals();
+    public ResponseEntity<List<AnimalResponse>> findRandomAvailableAnimals() {
+        List<AnimalResponse> randomAnimals = this.animalService.findRandomAvailableAnimals();
+        return ResponseEntity.ok(randomAnimals);
     }
 
     @GetMapping("")
-    public AnimalResponse findAnimalById(@RequestParam Long animalId, @RequestParam Long userId) {
+    public ResponseEntity<AnimalResponse> findAnimalById(@RequestParam Long animalId, @RequestParam Long userId) {
         try {
-            return animalService.findAnimalById(animalId, userId);
+            AnimalResponse animal = this.animalService.findAnimalById(animalId, userId);
+            return ResponseEntity.ok(animal);
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Animal not found");
         }
     }
 
     @GetMapping("/available")
-    public Page<AnimalWalkResponse> findAllAvailableAnimals(@RequestParam int page, @RequestParam int size) {
+    public ResponseEntity<Page<AnimalWalkResponse>> findAllAvailableAnimals(@RequestParam int page, @RequestParam int size) {
         try {
-            return animalService.findAllAvailableAnimals(page, size);
+            Page<AnimalWalkResponse> availableAnimals = this.animalService.findAllAvailableAnimals(page, size);
+            return ResponseEntity.ok(availableAnimals);
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid request");
         }
     }
 
     @PostMapping("/update-rating")
-    public Page<AnimalWalkResponse> updateAnimalRating(@RequestParam int page, @RequestParam int size) {
+    public ResponseEntity<Page<AnimalWalkResponse>> updateAnimalRating(@RequestParam int page, @RequestParam int size) {
         try {
-            return animalService.findAllAvailableAnimals(page, size);
+            Page<AnimalWalkResponse> updatedAnimals = this.animalService.findAllAvailableAnimals(page, size);
+            return ResponseEntity.ok(updatedAnimals);
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid rating update request");
         }
     }
 
     @PutMapping(consumes = {"multipart/form-data"})
-    public void updateAnimal(
+    public ResponseEntity<Void> updateAnimal(
             @RequestParam Long id,
             @RequestParam("img") MultipartFile img,
-            @ModelAttribute AnimalRequest animal // Changed here
-    ) throws IOException {
+            @ModelAttribute AnimalRequest animal
+    ) {
         this.animalService.updateAnimal(id, animal, img);
+        return ResponseEntity.noContent().build();
     }
 
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    @GetMapping("/{id}/volunteer")
-//    public UserIdResponse getVolunteerFor(@PathVariable Long id) {
-//
-//        Long userId = animalService.findAnimalById(id).getUserId();
-//        return userService.findById(userId);
-//    }
-
-    //    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping(consumes = {"multipart/form-data"})
-    public void createAnimal(
+    public ResponseEntity<Void> createAnimal(
             @RequestPart("img") MultipartFile img,
             @RequestPart("animal") AnimalRequest animal
     ) {
-        try {
-            animalService.createAnimal(animal, img);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Write it right !!!", e);
-        } catch (DuplicateKeyException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "All ready exist !!!", e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        System.out.println("kurec");
+        this.animalService.createAnimal(animal, img);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @DeleteMapping()
-    public void deleteAnimal(@RequestParam Long id) {
-        animalService.delete(id);
-    }
-
-//    @PreAuthorize("hasAuthority('ADMIN')")
-//    @GetMapping("/isAvailable/{id}")
-//    public AnimalAvailableResponse isAvailable(@PathVariable Long id) {
-//        try {
-//            return animalService.findAnimalById(id);
-//        } catch (EntityNotFoundException e) {
-//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found !!!", e);
-//        }
-//    }
-
-    //    @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/onWalk/page/{page}")
-    public Page<AnimalWalkResponse> onWalk(@PathVariable int page) {
-        try {
-            return animalService.findAllAvailable(page);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    // TODO ENVERS HIBERNATE DEPENDENCY AND USE @SLf4J LOGGER
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @DeleteMapping("/adopt/{id}")
-    public void adoptAnimal(@PathVariable Long id) {
-        try {
-            animalService.adoptAnimal(id);
-        } catch (EntityNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Animal not found");
-        }
+    public ResponseEntity<Void> deleteAnimal(@RequestParam Long id) {
+        this.animalService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
