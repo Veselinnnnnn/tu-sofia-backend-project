@@ -1,10 +1,8 @@
--- Create UserRole table
 CREATE TABLE user_roles (
                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
                             role VARCHAR(255) NOT NULL
 );
 
--- Create User table
 CREATE TABLE users (
                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        username VARCHAR(255) NOT NULL UNIQUE,
@@ -18,7 +16,6 @@ CREATE TABLE users (
                        FOREIGN KEY (role_id) REFERENCES user_roles(id)
 );
 
--- Create AdvancedUserDetails table
 CREATE TABLE advanced_user_details (
                                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                        user_id BIGINT NOT NULL,
@@ -40,7 +37,6 @@ CREATE TABLE advanced_user_details (
                                        FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Create Animal table
 CREATE TABLE animals (
                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
                          name VARCHAR(255),
@@ -56,7 +52,6 @@ CREATE TABLE animals (
                          FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Create Comment table
 CREATE TABLE comments (
                           id BIGINT AUTO_INCREMENT PRIMARY KEY,
                           content VARCHAR(255) NOT NULL,
@@ -70,7 +65,6 @@ CREATE TABLE comments (
                           FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Create CommentReaction table
 CREATE TABLE comment_reactions (
                                    id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                    user_id BIGINT NOT NULL,
@@ -80,7 +74,6 @@ CREATE TABLE comment_reactions (
                                    FOREIGN KEY (comment_id) REFERENCES comments(id)
 );
 
--- Create WalkHistory table
 CREATE TABLE walk_histories (
                                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                 user_id BIGINT,

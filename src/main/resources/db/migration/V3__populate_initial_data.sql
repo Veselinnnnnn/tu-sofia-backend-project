@@ -74,33 +74,15 @@ SELECT
 FROM numbers
 LIMIT 250;
 
-# INSERT INTO animals (name, type, availability, breed, age, description, rating, slogan, img, user_id)
-# SELECT
-#     (SELECT name FROM animal_names ORDER BY RAND() LIMIT 1) AS name,
-#     CASE WHEN RAND() > 0.5 THEN 'Dog' ELSE 'Cat' END AS type,
-#     RAND() > 0.5 AS availability,
-#     CASE WHEN CASE WHEN RAND() > 0.5 THEN 'Dog' ELSE 'Cat' END = 'Dog' THEN 'DogBreed' ELSE 'CatBreed' END AS breed,
-#     FLOOR(RAND() * 15) AS age,
-#     CONCAT('Description for ', name) AS description,
-#     ROUND(RAND() * 5, 2) AS rating,
-#     CONCAT('Slogan for ', name) AS slogan,
-#     NULL AS img,
-#     (SELECT id FROM users ORDER BY RAND() LIMIT 1) AS user_id
-# FROM
-#     (SELECT @row := @row + 1 AS num FROM (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3) t1, (SELECT 0 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3) t2, (SELECT @row := 0) t3) n
-# LIMIT 250;
-
-
-
 INSERT INTO comments (content, created_at, animal_id, user_id, likes, dislikes, rating)
 SELECT
     CONCAT('Comment content ', num) AS content,
-    NOW() - INTERVAL (RAND() * 30) DAY AS created_at,  -- Random date within the last 30 days
+    NOW() - INTERVAL (RAND() * 30) DAY AS created_at,
     (SELECT id FROM animals ORDER BY RAND() LIMIT 1) AS animal_id,
     (SELECT id FROM users ORDER BY RAND() LIMIT 1) AS user_id,
-    FLOOR(RAND() * 100) AS likes,       -- Random number of likes between 0 and 100
-    FLOOR(RAND() * 100) AS dislikes,    -- Random number of dislikes between 0 and 100
-    FLOOR(RAND() * 5) AS rating         -- Random rating between 0 and 5
+    FLOOR(RAND() * 100) AS likes,
+    FLOOR(RAND() * 100) AS dislikes,
+    FLOOR(RAND() * 5) AS rating
 FROM numbers
 LIMIT 250;
 
