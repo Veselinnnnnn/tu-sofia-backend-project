@@ -42,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String jwt = extractJwtFromHeader(authHeader);
         Long userId = extractUserIdFromJwt(jwt);
-        System.out.println("kurec");
+        System.out.println("Error!");
         System.out.println(userId);
         if (userId != null && isAuthenticationAbsent()) {
             authenticateUser(request, jwt, userId);
