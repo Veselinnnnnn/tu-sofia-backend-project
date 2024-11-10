@@ -14,12 +14,12 @@ import java.util.Date;
 @Builder
 public class Testimonial extends BaseEntity {
     @Column(nullable = false)
-    private String message; // The testimonial message
+    private String message;
 
     @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt; // Timestamp when the testimonial was created
+    private Date createdAt;
 
-    @ManyToOne // Assuming many testimonials can belong to one user
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user; // User who left the testimonial
+    private User user;
 }

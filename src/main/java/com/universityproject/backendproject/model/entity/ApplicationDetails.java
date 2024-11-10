@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 
 @Data
 @Getter
@@ -29,7 +28,6 @@ public class ApplicationDetails extends BaseEntity{
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
-    // Contact Information
     @Column(name = "address", nullable = false)
     private String address;
 
@@ -45,21 +43,19 @@ public class ApplicationDetails extends BaseEntity{
     @Column(name = "country", nullable = false)
     private String country;
 
-    // Pet Adoption Details
     @ManyToOne
     @JoinColumn(name = "animal_id", referencedColumnName = "id")
-    private Animal animal; // Assuming you have an Animal entity
+    private Animal animal;
 
     @Column(name = "reason_for_adoption", columnDefinition = "TEXT")
     private String reasonForAdoption;
 
     @Column(name = "pick_up_time")
-    private String pickUpTime; // Pick up time for the animal
+    private String pickUpTime;
 
     @Column(name = "return_time")
-    private String returnTime; // Return time for the animal
+    private String returnTime;
 
-    // Additional Information
     @Column(name = "has_previous_experience_with_pets")
     private Boolean hasPreviousExperienceWithPets;
 

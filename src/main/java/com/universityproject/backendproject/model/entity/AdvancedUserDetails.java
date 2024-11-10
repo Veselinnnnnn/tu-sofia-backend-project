@@ -2,11 +2,6 @@ package com.universityproject.backendproject.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.Collection;
-import java.util.List;
 
 @Entity
 @Table(name = "advanced_user_details")
@@ -46,13 +41,13 @@ public class AdvancedUserDetails extends BaseEntity {
     private boolean hasOtherPets;
 
     @Column(nullable = false)
-    private String householdType; // e.g., House, Apartment, etc.
+    private String householdType;
 
     @Column(nullable = false)
-    private String employmentStatus; // e.g., Employed, Unemployed, Retired, etc.
+    private String employmentStatus;
 
     @Column(nullable = false)
-    private String reasonForAdoption; // Why they want to adopt
+    private String reasonForAdoption;
 
     @Column(nullable = false)
     private boolean hasChildren;
@@ -61,8 +56,8 @@ public class AdvancedUserDetails extends BaseEntity {
     private boolean hasFencedYard;
 
     @Column(nullable = false)
-    private String referenceContact; // A personal reference contact for verification
+    private String referenceContact;
 
     @Column(nullable = false)
-    private String backgroundCheckStatus; // E.g., Pending, Cleared, etc.
+    private String backgroundCheckStatus;
 }

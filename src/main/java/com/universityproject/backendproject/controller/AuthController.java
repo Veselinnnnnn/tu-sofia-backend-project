@@ -1,6 +1,5 @@
 package com.universityproject.backendproject.controller;
 
-import com.universityproject.backendproject.exception.*;
 import com.universityproject.backendproject.model.dto.authentication.request.AuthenticationRequest;
 import com.universityproject.backendproject.model.dto.authentication.request.RegisterRequest;
 import com.universityproject.backendproject.model.dto.authentication.request.ResetPasswordRequest;
@@ -11,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
@@ -24,7 +22,7 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
         authenticationService.resetPassword(request);
-        return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/forgot-password")

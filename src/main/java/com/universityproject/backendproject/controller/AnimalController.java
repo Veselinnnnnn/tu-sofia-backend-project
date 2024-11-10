@@ -84,7 +84,6 @@ public class AnimalController {
             @RequestPart("img") MultipartFile img,
             @RequestPart("animal") AnimalRequest animal
     ) {
-        System.out.println("kurec");
         this.animalService.createAnimal(animal, img);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
